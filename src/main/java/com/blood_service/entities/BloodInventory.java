@@ -13,6 +13,7 @@ import com.common.enums.PriorityLevel;
 import com.common.enums.QuarantineStatus;
 import com.common.enums.RhFactor;
 import com.common.enums.StorageType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.vladmihalcea.hibernate.type.json.JsonType;
@@ -81,17 +82,7 @@ public class BloodInventory implements Serializable{
 	    
 	    @Column(nullable = false)
 	    private boolean verified; // Verified by Donation Service or Quality Check
-	    
-	    @Column(nullable = false)
-	    private StorageType storageLocation; 
 
-//	    @Type(JsonType.class)
-//	    @Column(columnDefinition = "jsonb") 
-//	    private Map<String, Object> temperatureLogs; // Track storage temperature history
-//	    
-//	    @Type(JsonType.class)
-//	    @Column(columnDefinition = "jsonb") 
-//	    private Map<String, Object> bloodTestResults; // Hemoglobin, infectious disease tests, etc.
 	    
 	    @Enumerated(EnumType.STRING)  
 	    @Column(nullable = false)
@@ -118,15 +109,9 @@ public class BloodInventory implements Serializable{
 	    private UUID auditReferenceId; // Reference to latest audit log entry
 	    
 	    private Instant reservedUntil; // Optional hold until this timestamp
-	    
-	    @Column(nullable = false)
-	    @Embedded
-	    private Location geoLocation; // Optional location tracking
-	    
+	
 	    private boolean expiryAlertSent; // Indicates if near-expiry alert was sent
-	    
-	    private List<Map<String, Object>> usageHistory; // Past assignments or usage
-	    
+	     
 	    private String encryptionKeyId; // Reference to encryption key for sensitive info
 	    
 	    @Enumerated(EnumType.STRING)  
@@ -136,5 +121,18 @@ public class BloodInventory implements Serializable{
 	    @OneToMany(mappedBy = "BloodInventory")
 	    @JsonManagedReference
 	    private List<BloodUnitHistory> bloodUnitHistory;
-
+	    
+	    
+	   @OneToMany(mappedBy = "bloodInventory")
+	   @JsonBackReference
+	    private List<Location> location; 
+	    
 }
+//private List<Map<String, Object>> usageHistory; // Past assignments or usage
+//@Type(JsonType.class)
+//@Column(columnDefinition = "jsonb") 
+//private Map<String, Object> temperatureLogs; // Track storage temperature history
+//
+//@Type(JsonType.class)
+//@Column(columnDefinition = "jsonb") 
+//private Map<String, Object> bloodTestResults; // Hemoglobin, infectious disease tests, etc.
