@@ -40,6 +40,8 @@ import com.common.enums.QuarantineStatus;
 import com.common.enums.RhFactor;
 import com.common.enums.StorageType;
 import com.common.exception.BloodBankBusinessException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -193,11 +195,18 @@ public class BloodBankServiceImpl implements BloodBankService {
           boolean stoageUnit =  bloodBank.getStorageUnits().isEmpty();
           // checking for storage unit for this blood bank
           if(stoageUnit) 
-     	     throw 	new BloodBankBusinessException(ErrorConstants.NO_STORAGE_UNIT,HttpStatus.BAD_REQUEST,ErrorConstants.INVALID_DATA);
+	     	     throw 	new BloodBankBusinessException(ErrorConstants.NO_STORAGE_UNIT,HttpStatus.BAD_REQUEST,ErrorConstants.INVALID_DATA);
 
 	    Double components =  bloodInventoryDto.getBloodComponets().stream().filter(Objects::nonNull).mapToDouble(value -> value.getVolumeMl()).sum();
 	    int finalValue =  (int) Math.round(components);
 	    
+	    List<BloodInventory> inventories = new ArrayList<>();
+	    Optional<StorageUnit> remainedUnit = bloodBank.getStorageUnits().stream().filter(Objects::nonNull)
+	    		                 .filter(unit -> unit.getCapacityML() >= finalValue).findFirst(); 
+        
+    	if(remainedUnit.isEmpty()) 
+   	     throw 	new BloodBankBusinessException(ErrorConstants.NO_STORAGE_UNIT,HttpStatus.BAD_REQUEST,ErrorConstants.INVALID_DATA);
+    	
 	    // Helpers for conversions
 	    ZoneId zone = ZoneId.of("Asia/Kolkata"); // your environment timezone
 	    Instant collectedAtInstant = null;
@@ -206,13 +215,6 @@ public class BloodBankServiceImpl implements BloodBankService {
 	        collectedAtInstant = bloodInventoryDto.getCollectedAt().atZone(zone).toInstant();
 	    }
 
-	    List<BloodInventory> inventories = new ArrayList<>();
-	    Optional<StorageUnit> remainedUnit = bloodBank.getStorageUnits().stream()
-	    		                 .filter(unit -> unit.getCapacityML() >= finalValue).findFirst(); 
-        
-    	if(remainedUnit.isEmpty()) 
-   	     throw 	new BloodBankBusinessException(ErrorConstants.NO_STORAGE_UNIT,HttpStatus.BAD_REQUEST,ErrorConstants.INVALID_DATA);
-    	
 	    if (bloodInventoryDto.getBloodComponets() != null) {
 	   
 	        for (var comp : bloodInventoryDto.getBloodComponets()) {
@@ -271,6 +273,14 @@ public class BloodBankServiceImpl implements BloodBankService {
 	            inventory.setExpiryAlertSent(false);
 	            inventory.setEncryptionKeyId(null);
 	            inventory.setAccessLevel(AccessLevel.HOSPITAL_ONLY);
+	            
+	            ObjectMapper mapper = new ObjectMapper();
+	            try {
+					inventory.setMetadata(mapper.writeValueAsString(bloodInventoryDto.getLab()));
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					throw new BloodBankBusinessException(ErrorConstants.ERROR_WHILE_PARSING,HttpStatus.BAD_REQUEST,ErrorConstants.INVALID_DATA);
+				}
 
 	            bloodInventoryRepositary.save(inventory);
 	            inventories.add(inventory);

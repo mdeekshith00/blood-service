@@ -22,5 +22,6 @@ public class StorageUnitDto {
 	    private Integer capacityML; // storage capacity
 	    private String temperatureLog; // link to temp sensors or logs
 	    private String metadata;
+	    private BloodBankDto bloodBank;
 
 }

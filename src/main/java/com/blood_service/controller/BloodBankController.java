@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.blood_service.dto.BloodBankDto;
@@ -34,8 +35,8 @@ public class BloodBankController {
 		BloodBankDto bloodBankDto = bloodBankService.createBloodBank(createBloodBankVo);
 		return ResponseEntity.status(HttpStatus.CREATED).body(bloodBankDto);
 	}
-	@PostMapping
-	public ResponseEntity<String> verifyBloodBank(@PathVariable Integer bankId) {
+	@PostMapping("/verify-bank")
+	public ResponseEntity<String> verifyBloodBank(@RequestParam Integer bankId) {
 		String msg = bloodBankService.verifyBloodBank(bankId);
 		return ResponseEntity.status(HttpStatus.CREATED).body(msg);
 	}
@@ -44,7 +45,7 @@ public class BloodBankController {
 		BloodBankDto bloodBankDto = bloodBankService.getBloodBank(bankId);
 		return ResponseEntity.status(HttpStatus.CREATED).body(bloodBankDto);
 	}
-	@PutMapping
+	@PutMapping("/update-bloodbank/{bankId}")
 	public ResponseEntity<BloodBankDto> updateBloodBank(@PathVariable Integer bankId ,@RequestBody UpdateBloodBankVO createBloodBankVo) {
 		BloodBankDto bloodBankDto = bloodBankService.updateBloodBank(bankId, createBloodBankVo);
 		return ResponseEntity.status(HttpStatus.CREATED).body(bloodBankDto);
@@ -54,6 +55,7 @@ public class BloodBankController {
 		LocationDto locationDto = bloodBankService.addLocation(bankId, locationVo);
 		return ResponseEntity.status(HttpStatus.CREATED).body(locationDto);
 	}
+	
 	@PostMapping("/send-bloodtobank")
 	public ResponseEntity<String> sendBloodToBank(@RequestBody BloodInventoryDto bloodInventoryDto ) {
 		 log.info("Received request: {}", bloodInventoryDto.getDonationId());
